@@ -26,7 +26,7 @@ export class Storage extends Stage {
         'AwsManagedMicrosoftAd',
         {
           vpc: vpc,
-        }
+        },
       ).microsoftAD.ref;
 
     this.fsxWindows = new skylight.storage.FSxWindows(stateful, 'FSxWindows', {
