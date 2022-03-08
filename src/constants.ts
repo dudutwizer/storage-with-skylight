@@ -23,4 +23,9 @@ export const constants = {
   },
   PROD_VPC_ID: 'vpc-08a1f9f43269a7e2f',
   PROD_DIRECTORY_ID: 'd-906743935f',
+  PROD_DOMAIN_NAME: 'skylight.aws',
+  PROD_DOMAIN_SECRETNAME: 'AwsManagedMicrosoftAdSecretA397C0D2',
+  PROD_MultiAz: true,
+  PROD_fileSystemSize: 500,
+  PROD_throughputMbps: 64,
 } as const;

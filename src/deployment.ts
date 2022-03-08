@@ -1,17 +1,25 @@
 import { aws_ec2, Stack, Stage, StageProps } from 'aws-cdk-lib';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import * as skylight from 'cdk-skylight';
 import { Construct } from 'constructs';
 import { constants } from './constants';
 
 export interface IStorageProps extends StageProps {
   vpcId?: string;
+  multiAz?: boolean;
+  fileSystemSize?: number;
+  throughputMbps?: number;
 }
 
 export class Storage extends Stage {
   readonly fsxWindows: skylight.storage.FSxWindows;
+  readonly fsxManagedBox: skylight.compute.DomainWindowsNode;
 
   constructor(scope: Construct, id: string, props: IStorageProps) {
     super(scope, id, props);
+    props.multiAz = props.multiAz ?? false;
+    props.fileSystemSize = props.fileSystemSize ?? 200;
+    props.throughputMbps = props.throughputMbps ?? 64;
 
     const stateful = new Stack(this, 'Stateful', {});
 
@@ -26,12 +34,25 @@ export class Storage extends Stage {
         'AwsManagedMicrosoftAd',
         {
           vpc: vpc,
-        },
+        }
       ).microsoftAD.ref;
 
     this.fsxWindows = new skylight.storage.FSxWindows(stateful, 'FSxWindows', {
       directoryId: directoryId,
       vpc: vpc,
+      multiAZ: props.multiAz,
+      fileSystemSize: props.fileSystemSize,
+      throughputMbps: props.throughputMbps,
     });
+
+    const secretObject = Secret.fromSecretNameV2(
+      stateful,
+      'secret',
+      constants.PROD_DOMAIN_SECRETNAME
+    );
+    this.fsxManagedBox = this.fsxWindows.createWorker(
+      constants.PROD_DOMAIN_NAME,
+      secretObject
+    );
   }
 }
