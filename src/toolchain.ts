@@ -19,7 +19,7 @@ export class Toolchain extends Stack {
       }),
     });
 
-    const authentication = new Storage(this, `${constants.APP_NAME}-Prod`, {
+    const storage = new Storage(this, `${constants.APP_NAME}-Prod`, {
       vpcId: constants.PROD_VPC_ID,
       env: constants.PROD_ENV,
       multiAz: constants.PROD_MultiAz,
@@ -27,6 +27,6 @@ export class Toolchain extends Stack {
       throughputMbps: constants.PROD_throughputMbps,
     });
 
-    codepipeline.addStage(authentication);
+    codepipeline.addStage(storage);
   }
 }
