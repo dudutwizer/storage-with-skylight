@@ -13,7 +13,7 @@ export class Toolchain extends Stack {
         input: pipelines.CodePipelineSource.connection(
           `${constants.GITHUB_REPO_OWNER}/${constants.GITHUB_REPO_NAME}`,
           constants.GITHUB_REPO_BRANCH,
-          { connectionArn: constants.GITHUB_CONNECTION_ARN }
+          { connectionArn: constants.GITHUB_CONNECTION_ARN },
         ),
         commands: ['npm install', 'npm run build', 'npx cdk synth'],
       }),
@@ -25,6 +25,11 @@ export class Toolchain extends Stack {
       multiAz: constants.PROD_MultiAz,
       fileSystemSize: constants.PROD_fileSystemSize,
       throughputMbps: constants.PROD_throughputMbps,
+      directoryParameters: {
+        directoryId: constants.PROD_DIRECTORY_ID,
+        directoryDomain: constants.PROD_DOMAIN_NAME,
+        directorySecretName: constants.PROD_DOMAIN_SECRETNAME,
+      },
     });
 
     codepipeline.addStage(storage);

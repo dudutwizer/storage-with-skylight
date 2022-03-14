@@ -2,13 +2,17 @@ import { aws_ec2, Stack, Stage, StageProps } from 'aws-cdk-lib';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import * as skylight from 'cdk-skylight';
 import { Construct } from 'constructs';
-import { constants } from './constants';
 
 export interface IStorageProps extends StageProps {
   vpcId?: string;
   multiAz?: boolean;
   fileSystemSize?: number;
   throughputMbps?: number;
+  directoryParameters?: {
+    directoryId: string;
+    directoryDomain: string;
+    directorySecretName: string;
+  };
 }
 
 export class Storage extends Stage {
@@ -27,32 +31,39 @@ export class Storage extends Stage {
       ? aws_ec2.Vpc.fromLookup(stateful, 'Vpc', { vpcId: props.vpcId })
       : new aws_ec2.Vpc(stateful, 'Vpc', { maxAzs: 2 });
 
-    const directoryId =
-      constants.PROD_DIRECTORY_ID ??
-      new skylight.authentication.AwsManagedMicrosoftAd(
-        this,
+    if (!props.directoryParameters) {
+      const newDirectory = new skylight.authentication.AwsManagedMicrosoftAd(
+        stateful,
         'AwsManagedMicrosoftAd',
         {
           vpc: vpc,
-        }
-      ).microsoftAD.ref;
+        },
+      );
+      props.directoryParameters = {
+        directoryDomain: newDirectory.props.domainName!,
+        directoryId: newDirectory.microsoftAD.ref,
+        directorySecretName: newDirectory.secret.secretName,
+      };
+    }
 
     this.fsxWindows = new skylight.storage.FSxWindows(stateful, 'FSxWindows', {
-      directoryId: directoryId,
+      directoryId: props.directoryParameters.directoryId,
       vpc: vpc,
       multiAZ: props.multiAz,
       fileSystemSize: props.fileSystemSize,
       throughputMbps: props.throughputMbps,
     });
 
+    // Creates CDK Object of the provided Secret (Without verifing the secret exist or not)
     const secretObject = Secret.fromSecretNameV2(
       stateful,
       'secret',
-      constants.PROD_DOMAIN_SECRETNAME
+      props.directoryParameters.directorySecretName,
     );
+
     this.fsxManagedBox = this.fsxWindows.createWorker(
-      constants.PROD_DOMAIN_NAME,
-      secretObject
+      props.directoryParameters.directoryDomain,
+      secretObject,
     );
   }
 }

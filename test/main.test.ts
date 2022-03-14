@@ -10,6 +10,6 @@ test('StorageComponent', () => {
 
   expect(stack).toHaveProperty(
     'fsxWindows.fsxObject.cfnResourceType',
-    'AWS::FSx::FileSystem'
+    'AWS::FSx::FileSystem',
   );
 });

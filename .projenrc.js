@@ -7,5 +7,6 @@ const project = new awscdk.AwsCdkTypeScriptApp({
   name: 'authentication',
   deps: ['cdk-skylight'] /* Runtime dependencies of this module. */,
   releaseToNpm: false,
+  majorVersion: 0.1,
 });
 project.synth();
